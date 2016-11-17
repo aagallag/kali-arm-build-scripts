@@ -188,10 +188,9 @@ EOF
 
 # Kernel section. If you want to use a custom kernel, or configuration, replace
 # them in this section.
-git clone --depth 1 https://github.com/raspberrypi/linux -b rpi-4.4.y ${basedir}/root/usr/src/kernel
+echo "Cloning the RaspberryPi3 NexMon repo"
+git clone --depth 1 https://github.com/seemoo-lab/bcm-rpi3 -b master ${basedir}/root/usr/src
 cd ${basedir}/root/usr/src/kernel
-git rev-parse HEAD > ../kernel-at-commit
-patch -p1 --no-backup-if-mismatch < ${basedir}/../patches/kali-wifi-injection-4.4.patch
 touch .scmversion
 export ARCH=arm
 export CROSS_COMPILE=arm-linux-gnueabihf-
@@ -237,14 +236,22 @@ EOF
 # Firmware needed for rpi3 wifi/bt
 mkdir -p ${basedir}/root/lib/firmware/brcm/
 cp ${basedir}/../misc/rpi3/brcmfmac43430-sdio.txt ${basedir}/root/lib/firmware/brcm/
-cp ${basedir}/../misc/rpi3/brcmfmac43430-sdio.bin ${basedir}/root/lib/firmware/brcm/
-
-cd ${basedir}
+cp ${basedir}/../misc/rpi3/brcmfmac43430-sdio.bin ${basedir}/root/root/brcmfmac43430-sdio.orig.bin
 
 cp ${basedir}/../misc/zram ${basedir}/root/etc/init.d/zram
 chmod +x ${basedir}/root/etc/init.d/zram
 
+# Compile NexMon patches
+echo "Compiling NexMon Patches"
+cd ${basedir}/root/usr/src/
+source setup_env.sh
+cd firmware_patching/nexmon/
+make
+cp brcmfmac/brcmfmac.ko ${basedir}/root/root/
+cp brcmfmac43430-sdio.bin ${basedir}/root/lib/firmware/brcm/
+
 # Unmount partitions
+cd ${basedir}
 umount $bootp
 umount $rootp
 kpartx -dv $loopdevice
