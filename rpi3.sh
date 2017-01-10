@@ -207,6 +207,17 @@ cp ${basedir}/../kernel-configs/rpi2-4.4.config .config
 cp ${basedir}/../kernel-configs/rpi2-4.4.config ../rpi2-4.4.config
 make -j $(grep -c processor /proc/cpuinfo)
 make modules_install INSTALL_MOD_PATH=${basedir}/root
+git clone --depth 1 https://github.com/raspberrypi/firmware.git rpi-firmware
+cp -rf rpi-firmware/boot/* ${basedir}/bootp/
+# ARGH.  Device tree support requires we run this *sigh*
+perl scripts/mkknlimg --dtok arch/arm/boot/zImage ${basedir}/bootp/kernel7.img
+#cp arch/arm/boot/zImage ${basedir}/bootp/kernel7.img
+cp arch/arm/boot/dts/bcm*.dtb ${basedir}/bootp/
+cp arch/arm/boot/dts/overlays/*overlay*.dtb ${basedir}/bootp/overlays/
+rm -rf ${basedir}/root/lib/firmware
+cd ${basedir}/root/lib
+git clone --depth 1 https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git firmware
+rm -rf ${basedir}/root/lib/firmware/.git
 
 # Clone and compile Nexmon
 git clone --depth 1 https://github.com/aagallag/nexmon -b rpi3-crosscompile ${basedir}/root/usr/src/nexmon
@@ -219,18 +230,6 @@ make
 cp brcmfmac/brcmfmac.ko ${basedir}/root/root/
 cp brcmfmac43430-sdio.bin ${basedir}/root/lib/firmware/brcm/
 
-# Kernel Firmware
-git clone --depth 1 https://github.com/raspberrypi/firmware.git rpi-firmware
-cp -rf rpi-firmware/boot/* ${basedir}/bootp/
-# ARGH.  Device tree support requires we run this *sigh*
-perl scripts/mkknlimg --dtok arch/arm/boot/zImage ${basedir}/bootp/kernel7.img
-#cp arch/arm/boot/zImage ${basedir}/bootp/kernel7.img
-cp arch/arm/boot/dts/bcm*.dtb ${basedir}/bootp/
-cp arch/arm/boot/dts/overlays/*overlay*.dtb ${basedir}/bootp/overlays/
-rm -rf ${basedir}/root/lib/firmware
-cd ${basedir}/root/lib
-git clone --depth 1 https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git firmware
-rm -rf ${basedir}/root/lib/firmware/.git
 cd ${basedir}/root/usr/src/kernel
 make INSTALL_MOD_PATH=${basedir}/root firmware_install
 make mrproper
