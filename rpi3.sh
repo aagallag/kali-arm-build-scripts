@@ -8,6 +8,14 @@ if [[ $# -eq 0 ]] ; then
     exit 0
 fi
 
+# Detect if the arm cross compiler has been added to the PATH
+if hash arm-linux-gnueabihf-gcc 2>/dev/null; then
+	echo "Detected arm cross-compiler"
+else
+	echo "ARM cross-compiler not detected"
+	exit -1
+fi
+
 basedir=`pwd`/rpi3-$1
 
 # Package installations for various sections.
