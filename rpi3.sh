@@ -199,6 +199,18 @@ cp ${basedir}/../kernel-configs/rpi2-4.4.config .config
 cp ${basedir}/../kernel-configs/rpi2-4.4.config ../rpi2-4.4.config
 make -j $(grep -c processor /proc/cpuinfo)
 make modules_install INSTALL_MOD_PATH=${basedir}/root
+
+# Clone and compile Nexmon
+git clone --depth 1 https://github.com/aagallag/nexmon -b rpi3-crosscompile ${basedir}/root/usr/src/nexmon
+export RPI3_KERNEL_PATH=${basedir}/root/usr/src/kernel/
+cd ${basedir}/root/usr/src/nexmon
+source setup_env.sh
+make
+cd patches/bcm43438/7_45_41_26/nexmon/
+make
+
+# Linux Firmware
+cd ${basedir}/root/usr/src/kernel
 git clone --depth 1 https://github.com/raspberrypi/firmware.git rpi-firmware
 cp -rf rpi-firmware/boot/* ${basedir}/bootp/
 # ARGH.  Device tree support requires we run this *sigh*
@@ -237,7 +249,11 @@ EOF
 # Firmware needed for rpi3 wifi/bt
 mkdir -p ${basedir}/root/lib/firmware/brcm/
 cp ${basedir}/../misc/rpi3/brcmfmac43430-sdio.txt ${basedir}/root/lib/firmware/brcm/
-cp ${basedir}/../misc/rpi3/brcmfmac43430-sdio.bin ${basedir}/root/lib/firmware/brcm/
+cp ${basedir}/../misc/rpi3/brcmfmac43430-sdio.bin ${basedir}/root/lib/firmware/brcm/brcmfmac43430-sdio.orig.bin
+
+# Deploy Nexmon firmware
+cp ${basedir}/root/usr/src/nexmon/patches/bcm43438/7_45_41_26/nexmon/brcmfmac/brcmfmac.ko ${basedir}/root/root/
+cp ${basedir}/root/usr/src/nexmon/patches/bcm43438/7_45_41_26/nexmon/brcmfmac43430-sdio.bin ${basedir}/root/lib/firmware/brcm/
 
 cd ${basedir}
 
