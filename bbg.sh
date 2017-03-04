@@ -5,7 +5,7 @@ if [[ $# -eq 0 ]] ; then
     exit 0
 fi
 
-basedir=`pwd`/beaglebone-black-$1
+basedir=`pwd`/beaglebone-green-$1
 
 # Package installations for various sections.
 # This will build a minimal XFCE Kali system with the top 10 tools.
@@ -146,14 +146,14 @@ umount kali-$architecture/dev/
 umount kali-$architecture/proc
 
 # Create the disk and partition it
-echo "Creating image file for Beaglebone Black"
-dd if=/dev/zero of=${basedir}/kali-$1-bbb.img bs=1M count=7000
-parted kali-$1-bbb.img --script -- mklabel msdos
-parted kali-$1-bbb.img --script -- mkpart primary fat32 2048s 264191s
-parted kali-$1-bbb.img --script -- mkpart primary ext4 264192s 100%
+echo "Creating image file for Beaglebone Green"
+dd if=/dev/zero of=${basedir}/kali-$1-bbg.img bs=1M count=7000
+parted kali-$1-bbg.img --script -- mklabel msdos
+parted kali-$1-bbg.img --script -- mkpart primary fat32 2048s 264191s
+parted kali-$1-bbg.img --script -- mkpart primary ext4 264192s 100%
 
 # Set the partition variables
-loopdevice=`losetup -f --show ${basedir}/kali-$1-bbb.img`
+loopdevice=`losetup -f --show ${basedir}/kali-$1-bbg.img`
 device=`kpartx -va $loopdevice| sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
 sleep 5
 device="/dev/mapper/${device}"
@@ -191,7 +191,7 @@ EOF
 # Uncomment this if you use apt-cacher-ng or else git clones will fail.
 #unset http_proxy
 
-git clone https://github.com/beagleboard/linux -b 4.1 --depth 1 ${basedir}/root/usr/src/kernel
+git clone https://github.com/beagleboard/linux -b 3.8-green --depth 1 ${basedir}/root/usr/src/kernel
 cd ${basedir}/root/usr/src/kernel
 git rev-parse HEAD > ../kernel-at-commit
 export ARCH=arm
@@ -307,13 +307,13 @@ rm -rf ${basedir}/bootp ${basedir}/root ${basedir}/kali-$architecture ${basedir}
 # If you're building an image for yourself, comment all of this out, as you
 # don't need the sha1sum or to compress the image, since you will be testing it
 # soon.
-echo "Generating sha1sum for kali-$1-bbb.img"
-sha1sum kali-$1-bbb.img > ${basedir}/kali-$1-bbb.img.sha1sum
+echo "Generating sha1sum for kali-$1-bbg.img"
+sha1sum kali-$1-bbg.img > ${basedir}/kali-$1-bbg.img.sha1sum
 # Don't pixz on 32bit, there isn't enough memory to compress the images.
 MACHINE_TYPE=`uname -m`
 if [ ${MACHINE_TYPE} == 'x86_64' ]; then
-echo "Compressing kali-$1-bbb.img"
-pixz ${basedir}/kali-$1-bbb.img
-echo "Generating sha1sum for kali-$1-bbb.img.xz"
-sha1sum kali-$1-bbb.img.xz > ${basedir}/kali-$1-bbb.img.xz.sha1sum
+echo "Compressing kali-$1-bbg.img"
+pixz ${basedir}/kali-$1-bbg.img
+echo "Generating sha1sum for kali-$1-bbg.img.xz"
+sha1sum kali-$1-bbg.img.xz > ${basedir}/kali-$1-bbg.img.xz.sha1sum
 fi
